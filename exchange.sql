@@ -28,7 +28,8 @@ CREATE TABLE orders(
 	id INT NOT NULL AUTO_INCREMENT,
 	user CHAR(32) NOT NULL,
 	pair_id INT NOT NULL,
-	price DOUBLE NOT NULL,
+	base_quantity INT NOT NULL,
+	quote_quantity INT NOT NULL,
 	side ENUM('buy','sell') NOT NULL,
 	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
@@ -38,4 +39,14 @@ CREATE TABLE orders(
 );
 
 CREATE TABLE fills(
+	id INT NOT NULL AUTO_INCREMENT,
+	taker_order_id INT NOT NULL,
+	maker_order_id INT NOT NULL,
+	base_quantity INT NOT NULL,
+	quote_quantity INT NOT NULL,
+	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+	PRIMARY KEY(id),
+	FOREIGN KEY(taker_order_id) REFERENCES orders(id),
+	FOREIGN KEY(maker_order_id) REFERENCES orders(id)
 );
