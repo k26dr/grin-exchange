@@ -51,6 +51,11 @@ CREATE TABLE IF NOT EXISTS fills(
 	FOREIGN KEY(maker_order_id) REFERENCES orders(id)
 );
 
-CREATE FUNCTION submit_order(base_currency, quote_currency, base_quantity, quote_quantity, price)
+CREATE FUNCTION submit_order_buy(pair_id INT, base_quantity INT, quote_quantity INT)
+RETURNS TABLE
 BEGIN
+	CREATE TEMPORARY TABLE maker_orders
+	SELECT * FROM orders WHERE pair_id=pair_id AND side='sell'
+
+	
 END
