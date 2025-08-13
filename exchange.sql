@@ -1,10 +1,10 @@
-CREATE TABLE currencies(
+CREATE TABLE IF NOT EXISTS currencies(
 	name varchar(255),
 	decimals int not null,
 	PRIMARY KEY(name)
 );
 
-CREATE TABLE pairs(
+CREATE TABLE IF NOT EXISTS pairs(
 	id INT NOT NULL AUTO_INCREMENT,
 	base_currency varchar(255) not null,
 	quote_currency varchar(255) not null,
@@ -14,7 +14,7 @@ CREATE TABLE pairs(
 	UNIQUE(base_currency, quote_currency)
 );
 
-CREATE TABLE balances(
+CREATE TABLE IF NOT EXISTS balances(
 	user CHAR(32),
 	currency varchar(255),
 	balance INT NOT NULL DEFAULT(0),
@@ -24,7 +24,7 @@ CREATE TABLE balances(
 	FOREIGN KEY(currency) REFERENCES currencies(name)
 );
 
-CREATE TABLE orders(
+CREATE TABLE IF NOT EXISTS orders(
 	id INT NOT NULL AUTO_INCREMENT,
 	user CHAR(32) NOT NULL,
 	pair_id INT NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE orders(
 	FOREIGN KEY(user) REFERENCES mysql.user(User),
 );
 
-CREATE TABLE fills(
+CREATE TABLE IF NOT EXISTS fills(
 	id INT NOT NULL AUTO_INCREMENT,
 	taker_order_id INT NOT NULL,
 	maker_order_id INT NOT NULL,
@@ -50,3 +50,7 @@ CREATE TABLE fills(
 	FOREIGN KEY(taker_order_id) REFERENCES orders(id),
 	FOREIGN KEY(maker_order_id) REFERENCES orders(id)
 );
+
+CREATE FUNCTION submit_order(base_currency, quote_currency, base_quantity, quote_quantity, price)
+BEGIN
+END
