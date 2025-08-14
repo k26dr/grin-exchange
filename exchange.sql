@@ -60,5 +60,13 @@ BEGIN
 	SELECT * FROM orders WHERE pair_id=pair_id AND side='sell' AND filled_base_quantity != base_quantity
 	ORDER BY (base_quantity / quote_quantity) ASC;
 
+	DECLARE fill_qty INT DEFAULT 0;
+	DECLARE counter INT DEFAULT 0;
+	WHILE fill_qty < base_quantity DO
+		CREATE TEMPORARY TABLE order_entry SELECT * FROM maker_orders OFFSET counter LIMIT 1;
+		SET fill_qty = fill_qty + SELECT MIN(order_entry.base_quantity - order_entry.filled_base_quantity, base_quantity - fill_qty);
+		UPDATE orders SET filled_base_quantity = filled_base_quantity + fill_qty WHERE id=order_entry.id;
+		SET counter = counter + 1;
+	END WHILE;
 	
 END
