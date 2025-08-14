@@ -70,10 +70,11 @@ BEGIN
 	DECLARE num_maker_orders INT DEFAULT SELECT COUNT(*) FROM maker_orders;
 	WHILE fill_qty < base_quantity AND counter < num_maker_orders DO
 		CREATE TEMPORARY TABLE order_entry SELECT * FROM maker_orders OFFSET counter LIMIT 1;
-		SET fill_qty = fill_qty + SELECT MIN(order_entry.base_quantity - order_entry.filled_base_quantity, base_quantity - fill_qty);
+		DECLARE filled_base_quantity DEFAULT SELECT MIN(order_entry.base_quantity - order_entry.filled_base_quantity, base_quantity - fill_qty);
+		DECLARE filled_quote_quantity NUMERIC(32,18) DEFAULT (order_entry.quote_quantity * order_entry 
+		SET fill_qty = fill_qty + filled_base_quantity;
 		UPDATE orders SET filled_base_quantity = filled_base_quantity + fill_qty WHERE id=order_entry.id;
-		DECLARE quote_quantity NUMERIC(32,18) = 
-		INSERT INTO fills(taker_order_id, maker_order_id, base_quantity, quote_quantity
+		-- INSERT INTO fills(taker_order_id, maker_order_id, base_quantity, quote_quantity
 		SET counter = counter + 1;
 	END WHILE;
 
