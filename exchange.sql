@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS orders(
 	pair_id INT NOT NULL,
 	base_quantity NUMERIC(32,18) NOT NULL,
 	quote_quantity NUMERIC(32,18) NOT NULL,
-	filled_base_quantity INT NOT NULL,
+	filled_base_quantity INT DEFAULT 0,
 	side ENUM('buy','sell') NOT NULL,
 	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
@@ -71,12 +71,13 @@ BEGIN
 	WHILE fill_qty < base_quantity AND counter < num_maker_orders DO
 		CREATE TEMPORARY TABLE order_entry SELECT * FROM maker_orders OFFSET counter LIMIT 1;
 		DECLARE filled_base_quantity DEFAULT SELECT MIN(order_entry.base_quantity - order_entry.filled_base_quantity, base_quantity - fill_qty);
-		DECLARE filled_quote_quantity NUMERIC(32,18) DEFAULT (order_entry.quote_quantity * order_entry 
+		DECLARE filled_quote_quantity NUMERIC(32,18) DEFAULT (filled_base_quantity / order_entry.base_quantity * order_entry.quote_quantity);
 		SET fill_qty = fill_qty + filled_base_quantity;
 		UPDATE orders SET filled_base_quantity = filled_base_quantity + fill_qty WHERE id=order_entry.id;
-		-- INSERT INTO fills(taker_order_id, maker_order_id, base_quantity, quote_quantity
+		INSERT INTO fills(taker_order_id, maker_order_id, base_quantity, quote_quantity) VALUES (order_id, order_entry.id, filled_base_quantity, filled_quote_quantity);
 		SET counter = counter + 1;
 	END WHILE;
 
 	UPDATE orders SET filled_base_quantity = fill_qty WHERE id=order_id;	
+	RETURN SELECT * FROM orders WHERE id=order_id;
 END
