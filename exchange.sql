@@ -55,14 +55,15 @@ CREATE TABLE IF NOT EXISTS fills(
 	FOREIGN KEY(maker_order_id) REFERENCES orders(id)
 );
 
-CREATE FUNCTION submit_order_buy(pair_id INT, base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
+CREATE FUNCTION submit_order(pair_id INT, side ENUM('buy', 'sell') base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
 RETURNS TABLE
 BEGIN
+	DECLARE maker_side ENUM('buy', 'sell') DEFAULT CASE WHEN side = 'buy' THEN 'sell' ELSE 'buy';
 	DECLARE order_id INT DEFAULT
 	INSERT INTO orders (user, pair_id, base_quantity, quote_quantity, side) VALUES (USER(), pair_id, base_quantity, quote_quantity);
 
 	CREATE TEMPORARY TABLE maker_orders
-	SELECT * FROM orders WHERE pair_id=pair_id AND side='sell' AND filled_base_quantity != base_quantity
+	SELECT * FROM orders WHERE pair_id=pair_id AND side=maker_side AND filled_base_quantity != base_quantity
 	ORDER BY (base_quantity / quote_quantity) ASC;
 
 	DECLARE fill_qty NUMERIC(32,18) DEFAULT 0;
