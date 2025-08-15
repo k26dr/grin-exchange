@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS settlements(
 	FOREIGN KEY(currency) REFERENCES currencies(name)
 );
 
-CREATE FUNCTION submit_order(pair_id INT, side ENUM('buy', 'sell'), base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
+CREATE PROCEDURE submit_order(pair_id INT, side ENUM('buy', 'sell'), base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
 RETURNS TABLE
 BEGIN
 	DECLARE maker_side ENUM('buy', 'sell') DEFAULT CASE WHEN side = 'buy' THEN 'sell' ELSE 'buy';
