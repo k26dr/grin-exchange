@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS pairs(
 );
 
 CREATE TABLE IF NOT EXISTS balances(
-	user CHAR(32),
-	currency varchar(255),
+	user CHAR(32) NOT NULL,
+	currency varchar(255) NOT NULL,
 	balance INT NOT NULL DEFAULT(0),
 	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY(user, currency),
@@ -55,7 +55,19 @@ CREATE TABLE IF NOT EXISTS fills(
 	FOREIGN KEY(maker_order_id) REFERENCES orders(id)
 );
 
-CREATE FUNCTION submit_order(pair_id INT, side ENUM('buy', 'sell') base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
+CREATE TABLE IF NOT EXISTS settlements(
+	id INT NOT NULL AUTO_INCREMENT,
+	user CHAR(32) NOT NULL,
+	currency varchar(255) NOT NULL,
+	amount INT NOT NULL DEFAULT(0),
+	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY(id),
+	FOREIGN KEY(user) REFERENCES mysql.user(User),
+	FOREIGN KEY(currency) REFERENCES currencies(name)
+);
+
+CREATE FUNCTION submit_order(pair_id INT, side ENUM('buy', 'sell'), base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
 RETURNS TABLE
 BEGIN
 	DECLARE maker_side ENUM('buy', 'sell') DEFAULT CASE WHEN side = 'buy' THEN 'sell' ELSE 'buy';
