@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS settlements(
 	user CHAR(32) NOT NULL,
 	currency varchar(255) NOT NULL,
 	amount INT NOT NULL DEFAULT(0),
+	direction ENUM('deposit', 'withdraw') NOT NULL,
 	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY(id),
