@@ -1,5 +1,7 @@
 SET sql_safe_updates = 1;
 
+CREATE ROLE customer, settler, admin;
+
 CREATE TABLE IF NOT EXISTS currencies(
 	name varchar(255),
 	decimals int not null,
