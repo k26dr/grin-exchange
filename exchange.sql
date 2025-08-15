@@ -1,7 +1,5 @@
 SET sql_safe_updates = 1;
 
-CREATE ROLE customer, settler, admin;
-
 CREATE TABLE IF NOT EXISTS currencies(
 	name varchar(255),
 	decimals int not null,
@@ -22,6 +20,7 @@ CREATE TABLE IF NOT EXISTS balances(
 	user CHAR(32) NOT NULL,
 	currency varchar(255) NOT NULL,
 	balance INT NOT NULL DEFAULT(0),
+	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY(user, currency),
 	FOREIGN KEY(user) REFERENCES mysql.user(User),
@@ -97,3 +96,34 @@ BEGIN
 	UPDATE orders SET filled_base_quantity = fill_qty WHERE id=order_id;	
 	RETURN SELECT * FROM orders WHERE id=order_id;
 END
+
+CREATE PROCEDURE show_balances()
+RETURNS TABLE
+BEGIN
+	RETURN SELECT * FROM balances WHERE user=USER();
+END
+
+CREATE PROCEDURE my_orders()
+RETURNS TABLE
+BEGIN
+	RETURN SELECT * FROM orders WHERE user=USER();
+END
+
+CREATE PROCEDURE view_orderbook(pair_id INT, side ENUM('buy','sell'))
+RETURNS TABLE
+BEGIN
+	CREATE TEMPORARY TABLE unsorted_orders SELECT * FROM orders WHERE pair_id=pair_id;
+	RETURN IF(
+		side = 'buy', 
+		SELECT * FROM unsorted_orders ORDER BY (base_quantity / quote_quantity) DESC,
+		SELECT * FROM unsorted_orders ORDER BY (base_quantity / quote_quantity) ASC,
+	);
+END
+
+-- Role administration
+
+CREATE ROLE customer, settler, admin;
+
+GRANT EXECUTE ON submit_order to customer;
+GRANT EXECUTE ON show_balances to customer;
+GRANT INSERT ON settlements to settler;
