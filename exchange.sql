@@ -76,15 +76,21 @@ BEGIN
 	DECLARE order_id INT DEFAULT
 	INSERT INTO orders (user, pair_id, base_quantity, quote_quantity, side) VALUES (USER(), pair_id, base_quantity, quote_quantity);
 
-	CREATE TEMPORARY TABLE maker_orders
+	CREATE TEMPORARY TABLE unsorted_maker_orders
 	SELECT * FROM orders WHERE pair_id=pair_id AND side=maker_side AND filled_base_quantity != base_quantity
+
+	CREATE TEMPORARY TABLE sorted_maker_orders IF(
+		maker_side = 'buy', 
+		SELECT * FROM unsorted_maker_orders ORDER BY (base_quantity / quote_quantity) DESC,
+		SELECT * FROM unsorted_maker_orders ORDER BY (base_quantity / quote_quantity) ASC,
+	);
 	ORDER BY (base_quantity / quote_quantity) ASC;
 
 	DECLARE fill_qty NUMERIC(32,18) DEFAULT 0;
 	DECLARE counter INT DEFAULT 0;
-	DECLARE num_maker_orders INT DEFAULT SELECT COUNT(*) FROM maker_orders;
+	DECLARE num_maker_orders INT DEFAULT SELECT COUNT(*) FROM sorted_maker_orders;
 	WHILE fill_qty < base_quantity AND counter < num_maker_orders DO
-		CREATE TEMPORARY TABLE order_entry SELECT * FROM maker_orders OFFSET counter LIMIT 1;
+		CREATE TEMPORARY TABLE order_entry SELECT * FROM sorted_maker_orders OFFSET counter LIMIT 1;
 		DECLARE filled_base_quantity DEFAULT SELECT MIN(order_entry.base_quantity - order_entry.filled_base_quantity, base_quantity - fill_qty);
 		DECLARE filled_quote_quantity NUMERIC(32,18) DEFAULT (filled_base_quantity / order_entry.base_quantity * order_entry.quote_quantity);
 		SET fill_qty = fill_qty + filled_base_quantity;
@@ -126,4 +132,4 @@ CREATE ROLE customer, settler, admin;
 
 GRANT EXECUTE ON submit_order to customer;
 GRANT EXECUTE ON show_balances to customer;
-GRANT INSERT ON settlements to settler;
+GRANT EXECUTE ON view_orderbook to customer;
