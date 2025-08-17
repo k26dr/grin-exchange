@@ -56,19 +56,6 @@ CREATE TABLE IF NOT EXISTS fills(
 	FOREIGN KEY(maker_order_id) REFERENCES orders(id)
 );
 
-CREATE TABLE IF NOT EXISTS settlements(
-	id INT NOT NULL AUTO_INCREMENT,
-	user CHAR(32) NOT NULL,
-	currency varchar(255) NOT NULL,
-	amount INT NOT NULL DEFAULT(0),
-	direction ENUM('deposit', 'withdraw') NOT NULL,
-	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	PRIMARY KEY(id),
-	FOREIGN KEY(user) REFERENCES mysql.user(User),
-	FOREIGN KEY(currency) REFERENCES currencies(name)
-);
-
 CREATE PROCEDURE submit_order(pair_id INT, side ENUM('buy', 'sell'), base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
 RETURNS TABLE
 BEGIN
@@ -124,6 +111,25 @@ BEGIN
 		SELECT * FROM unsorted_orders ORDER BY (base_quantity / quote_quantity) DESC,
 		SELECT * FROM unsorted_orders ORDER BY (base_quantity / quote_quantity) ASC,
 	);
+END
+
+CREATE PROCEDURE create_balances(user varchar(255))
+RETURNS 'OK'
+BEGIN
+	INSERT INTO balances (user, currency, balance) VALUES (USER(), 'GRIN', 0);
+	INSERT INTO balances (user, currency, balance) VALUES (USER(), 'USDC', 0);
+END
+
+CREATE PROCEDURE add_balance(user varchar(255), amount INT)
+RETURNS 'OK'
+BEGIN
+	UPDATE balances SET balance=balance + amount WHERE user=user;
+END
+
+CREATE PROCEDURE sub_balance(user varchar(255), amount INT)
+RETURNS 'OK'
+BEGIN
+	UPDATE balances SET balance=balance - amount WHERE user=user;
 END
 
 -- Role administration
