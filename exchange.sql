@@ -136,6 +136,7 @@ END
 
 CREATE ROLE customer, settler, admin;
 
+GRANT EXECUTE ON create_balances, add_balance, sub_balance to settler;
 GRANT EXECUTE ON submit_order to customer;
 GRANT EXECUTE ON show_balances to customer;
 GRANT EXECUTE ON view_orderbook to customer;
