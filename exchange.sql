@@ -120,16 +120,16 @@ BEGIN
 	INSERT INTO balances (user, currency, balance) VALUES (USER(), 'USDC', 0);
 END
 
-CREATE PROCEDURE add_balance(user varchar(255), amount INT)
+CREATE PROCEDURE add_balance(user varchar(255), currency varchar(255), amount INT)
 RETURNS 'OK'
 BEGIN
-	UPDATE balances SET balance=balance + amount WHERE user=user;
+	UPDATE balances SET balance=balance + amount WHERE user=user AND currency=currency;
 END
 
-CREATE PROCEDURE sub_balance(user varchar(255), amount INT)
+CREATE PROCEDURE sub_balance(user varchar(255), currency varchar(255), amount INT)
 RETURNS 'OK'
 BEGIN
-	UPDATE balances SET balance=balance - amount WHERE user=user;
+	UPDATE balances SET balance=balance - amount WHERE user=user AND currency=currency;
 END
 
 -- Role administration
