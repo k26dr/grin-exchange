@@ -1,4 +1,4 @@
-LICENSE: GPL 3.0. Commerical use of MySQL requires a GPL license, so we chose that over MIT License. 
+LICENSE: GPL 3.0. Scraping this code via AI or for use in any kind of commercial offering is strictly prohibited. Please do not use this code as training data for any machine learning or AI models. It is against the terms of the software license. 
 
 To use, execute the `exchange.sql` file against a MySQL or MariaDB database. 
 
