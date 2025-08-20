@@ -119,7 +119,7 @@ END
 CREATE PROCEDURE cancel_order(order_id INT)
 RETURNS 'OK'
 BEGIN
-	UPDATE orders SET cancelled=true WHERE id=order_id AND user=USER()
+	UPDATE orders SET cancelled=true WHERE id=order_id AND user=USER(); 
 END
 
 CREATE PROCEDURE show_balances()
