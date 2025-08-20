@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS orders(
 	quote_quantity NUMERIC(32,18) NOT NULL,
 	filled_base_quantity INT DEFAULT 0,
 	side ENUM('buy','sell') NOT NULL,
+	cancelled BOOLEAN NOT NULL DEFAULT FALSE,
 	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
 	PRIMARY KEY (id),
@@ -73,7 +74,7 @@ CREATE TABLE IF NOT EXISTS withdraws(
 	user CHAR(32) NOT NULL,
 	currency varchar(255) NOT NULL,
 	amount NUMERIC(32,18) NOT NULL,
-	status ENUM('requested', 'pending', 'canceled', 'fulfilled') NOT NULL DEFAULT 'requested',
+	status ENUM('requested', 'pending', 'cancelled', 'fulfilled') NOT NULL DEFAULT 'requested',
 	txid varchar(255),
 	PRIMARY KEY(id),
 	FOREIGN KEY(user) REFERENCES mysql.user(User),
@@ -90,7 +91,7 @@ BEGIN
 	INSERT INTO orders (user, pair_id, base_quantity, quote_quantity, side) VALUES (USER(), pair_id, base_quantity, quote_quantity);
 
 	CREATE TEMPORARY TABLE unsorted_maker_orders
-	SELECT * FROM orders WHERE pair_id=pair_id AND side=maker_side AND filled_base_quantity != base_quantity
+	SELECT * FROM orders WHERE pair_id=pair_id AND side=maker_side AND filled_base_quantity != base_quantity AND cancelled = false
 
 	CREATE TEMPORARY TABLE sorted_maker_orders IF(
 		maker_side = 'buy', 
@@ -113,6 +114,12 @@ BEGIN
 
 	UPDATE orders SET filled_base_quantity = fill_qty WHERE id=order_id;	
 	RETURN SELECT * FROM orders WHERE id=order_id;
+END
+
+CREATE PROCEDURE cancel_order(order_id INT)
+RETURNS 'OK'
+BEGIN
+	UPDATE orders SET cancelled=true WHERE id=order_id AND user=USER()
 END
 
 CREATE PROCEDURE show_balances()
