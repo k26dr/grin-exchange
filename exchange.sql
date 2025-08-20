@@ -71,7 +71,6 @@ BEGIN
 		SELECT * FROM unsorted_maker_orders ORDER BY (base_quantity / quote_quantity) DESC,
 		SELECT * FROM unsorted_maker_orders ORDER BY (base_quantity / quote_quantity) ASC,
 	);
-	ORDER BY (base_quantity / quote_quantity) ASC;
 
 	DECLARE fill_qty NUMERIC(32,18) DEFAULT 0;
 	DECLARE counter INT DEFAULT 0;
