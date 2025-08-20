@@ -140,8 +140,8 @@ END
 CREATE PROCEDURE create_balances(user varchar(255))
 RETURNS 'OK'
 BEGIN
-	INSERT INTO balances (user, currency, balance) VALUES (USER(), 'GRIN', 0);
-	INSERT INTO balances (user, currency, balance) VALUES (USER(), 'USDC', 0);
+	INSERT IGNORE INTO balances (user, currency, balance) VALUES (USER(), 'GRIN', 0);
+	INSERT IGNORE INTO balances (user, currency, balance) VALUES (USER(), 'USDC', 0);
 END
 
 CREATE PROCEDURE create_deposit(user varchar(255), currency varchar(255), amount NUMERIC(32,18), txid varchar(255))
@@ -167,10 +167,10 @@ END
 
 -- Role administration
 
-CREATE ROLE customer, deposit_script, withdraw_script, admin;
+CREATE ROLE customer, depositer, withdrawer, admin;
 
-GRANT EXECUTE ON create_balances, create_deposit to deposit_script;
-GRANT EXECUTE ON fulfill_withdraw to withdraw_script;
+GRANT EXECUTE ON create_balances, create_deposit to depositer;
+GRANT EXECUTE ON fulfill_withdraw to withdrawer;
 GRANT SELECT ON withdraws to withdraw_script;
 GRANT EXECUTE ON submit_order to customer;
 GRANT EXECUTE ON show_balances to customer;
