@@ -147,6 +147,7 @@ END
 CREATE PROCEDURE create_deposit(user varchar(255), currency varchar(255), amount NUMERIC(32,18), txid varchar(255))
 RETURNS 'OK'
 BEGIN
+	CALL create_balances(USER());
 	UPDATE balances SET balance=balance + amount WHERE user=user AND currency=currency;
 	INSERT INTO deposits ('user', 'currency', 'amount', 'direction', 'txid') VALUES (USER(), currency, amount, txid);
 END
@@ -169,9 +170,10 @@ END
 
 CREATE ROLE customer, depositer, withdrawer, admin;
 
-GRANT EXECUTE ON create_balances, create_deposit to depositer;
+GRANT SELECT ON deposits to depositer;
+GRANT EXECUTE ON create_deposit to depositer;
+GRANT SELECT ON withdraws to withdrawer;
 GRANT EXECUTE ON fulfill_withdraw to withdrawer;
-GRANT SELECT ON withdraws to withdraw_script;
 GRANT EXECUTE ON submit_order to customer;
 GRANT EXECUTE ON show_balances to customer;
 GRANT EXECUTE ON view_orderbook to customer;
