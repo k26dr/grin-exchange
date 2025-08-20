@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS withdraws(
 	user CHAR(32) NOT NULL,
 	currency varchar(255) NOT NULL,
 	amount NUMERIC(32,18) NOT NULL,
+	status ENUM('requested', 'pending', 'canceled', 'fulfilled') NOT NULL DEFAULT 'requested',
 	txid varchar(255),
 	PRIMARY KEY(id),
 	FOREIGN KEY(user) REFERENCES mysql.user(User),
@@ -127,8 +128,6 @@ BEGIN
 END
 
 CREATE PROCEDURE view_orderbook(pair_id INT, side ENUM('buy','sell'))
-RETURNS TABLE
-BEGIN
 	CREATE TEMPORARY TABLE unsorted_orders SELECT * FROM orders WHERE pair_id=pair_id;
 	RETURN IF(
 		side = 'buy', 
@@ -164,6 +163,12 @@ RETURNS 'OK'
 BEGIN
 	UPDATE balances SET balance=balance - amount WHERE user=USER() AND currency=currency;
 	UPDATE withdraws SET txid=txid AND status='fulfilled' WHERE id=withdraw_id;
+END
+
+CREATE PROCEDURE update_withdraw_status(withdraw_id INT NOT NULL, withdraw_status ENUM('pending', 'cancelled'))
+RETURNS 'OK'
+BEGIN
+	UPDATE withdraws SET status=withdraw_status WHERE id=withdraw_id;
 END
 
 -- Role administration
