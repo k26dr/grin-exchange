@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS settlements(
 	txid varchar(255),
 	PRIMARY KEY(id),
 	FOREIGN KEY(user) REFERENCES mysql.user(User),
-	FOREIGN KEY(currency) REFERENCES currencies(name)
+	FOREIGN KEY(currency) REFERENCES currencies(name),
+	UNIQUE(txid)
 );
 
 CREATE PROCEDURE submit_order(pair_id INT, side ENUM('buy', 'sell'), base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
