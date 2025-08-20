@@ -158,12 +158,20 @@ BEGIN
 	INSERT INTO withdraws ('user', 'currency', 'amount') VALUES (USER(), currency, amount);
 END
 
+CREATE PROCEDURE fulfill_withdraw(withdraw_id INT NOT NULL, txid varchar(255) NOT NULL)
+RETURNS 'OK'
+BEGIN
+	UPDATE balances SET balance=balance - amount WHERE user=USER() AND currency=currency;
+	UPDATE withdraws SET txid=txid AND status='fulfilled' WHERE id=withdraw_id;
+END
+
 -- Role administration
 
-CREATE ROLE customer, settler, admin;
+CREATE ROLE customer, deposit_script, withdraw_script, admin;
 
-GRANT EXECUTE ON create_balances, create_deposit to settler;
-GRANT UPDATE ON settlements to settler;
+GRANT EXECUTE ON create_balances, create_deposit to deposit_script;
+GRANT EXECUTE ON fulfill_withdraw to withdraw_script;
+GRANT SELECT ON withdraws to withdraw_script;
 GRANT EXECUTE ON submit_order to customer;
 GRANT EXECUTE ON show_balances to customer;
 GRANT EXECUTE ON view_orderbook to customer;
