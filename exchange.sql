@@ -56,19 +56,30 @@ CREATE TABLE IF NOT EXISTS fills(
 	FOREIGN KEY(maker_order_id) REFERENCES orders(id)
 );
 
-CREATE TABLE IF NOT EXISTS settlements(
+CREATE TABLE IF NOT EXISTS deposits(
 	id INT NOT NULL AUTO_INCREMENT,
 	user CHAR(32) NOT NULL,
 	currency varchar(255) NOT NULL,
-	direction ENUM('deposit', 'withdraw') NOT NULL,
 	amount NUMERIC(32,18) NOT NULL,
-	status ENUM('pending', 'fulfilled', 'canceled') NOT NULL DEFAULT 'pending',
+	txid varchar(255) NOT NULL,
+	PRIMARY KEY(id),
+	FOREIGN KEY(user) REFERENCES mysql.user(User),
+	FOREIGN KEY(currency) REFERENCES currencies(name),
+	UNIQUE(txid)
+);
+
+CREATE TABLE IF NOT EXISTS withdraws(
+	id INT NOT NULL AUTO_INCREMENT,
+	user CHAR(32) NOT NULL,
+	currency varchar(255) NOT NULL,
+	amount NUMERIC(32,18) NOT NULL,
 	txid varchar(255),
 	PRIMARY KEY(id),
 	FOREIGN KEY(user) REFERENCES mysql.user(User),
 	FOREIGN KEY(currency) REFERENCES currencies(name),
 	UNIQUE(txid)
 );
+
 
 CREATE PROCEDURE submit_order(pair_id INT, side ENUM('buy', 'sell'), base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
 RETURNS TABLE
@@ -137,14 +148,14 @@ CREATE PROCEDURE create_deposit(user varchar(255), currency varchar(255), amount
 RETURNS 'OK'
 BEGIN
 	UPDATE balances SET balance=balance + amount WHERE user=user AND currency=currency;
-	INSERT INTO settlements ('user', 'currency', 'amount', 'direction', 'txid') VALUES (USER(), currency, amount, 'deposit', txid);
+	INSERT INTO deposits ('user', 'currency', 'amount', 'direction', 'txid') VALUES (USER(), currency, amount, txid);
 END
 
 CREATE PROCEDURE request_withdraw(currency varchar(255), amount NUMERIC(32,18))
 RETURNS 'OK'
 BEGIN
 	UPDATE balances SET balance=balance - amount WHERE user=USER() AND currency=currency;
-	INSERT INTO settlements ('user', 'currency', 'amount', 'direction') VALUES (USER(), currency, amount, 'withdraw');
+	INSERT INTO withdraws ('user', 'currency', 'amount') VALUES (USER(), currency, amount);
 END
 
 -- Role administration
