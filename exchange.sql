@@ -56,6 +56,19 @@ CREATE TABLE IF NOT EXISTS fills(
 	FOREIGN KEY(maker_order_id) REFERENCES orders(id)
 );
 
+CREATE TABLE IF NOT EXISTS settlements(
+	id INT NOT NULL AUTO_INCREMENT,
+	user CHAR(32) NOT NULL,
+	currency varchar(255) NOT NULL,
+	direction ENUM('deposit', 'withdraw') NOT NULL,
+	amount NUMERIC(32,18) NOT NULL,
+	status ENUM('pending', 'fulfilled', 'canceled') NOT NULL DEFAULT 'pending',
+	txid varchar(255),
+	PRIMARY KEY(id),
+	FOREIGN KEY(user) REFERENCES mysql.user(User),
+	FOREIGN KEY(currency) REFERENCES currencies(name)
+);
+
 CREATE PROCEDURE submit_order(pair_id INT, side ENUM('buy', 'sell'), base_quantity NUMERIC(32,18), quote_quantity NUMERIC(32,18))
 RETURNS TABLE
 BEGIN
@@ -119,23 +132,27 @@ BEGIN
 	INSERT INTO balances (user, currency, balance) VALUES (USER(), 'USDC', 0);
 END
 
-CREATE PROCEDURE add_balance(user varchar(255), currency varchar(255), amount NUMERIC(32,18))
+CREATE PROCEDURE create_deposit(user varchar(255), currency varchar(255), amount NUMERIC(32,18), txid varchar(255))
 RETURNS 'OK'
 BEGIN
 	UPDATE balances SET balance=balance + amount WHERE user=user AND currency=currency;
+	INSERT INTO settlements ('user', 'currency', 'amount', 'direction', 'txid') VALUES (USER(), currency, amount, 'deposit', txid);
 END
 
-CREATE PROCEDURE sub_balance(user varchar(255), currency varchar(255), amount NUMERIC(32,18))
+CREATE PROCEDURE request_withdraw(currency varchar(255), amount NUMERIC(32,18))
 RETURNS 'OK'
 BEGIN
-	UPDATE balances SET balance=balance - amount WHERE user=user AND currency=currency;
+	UPDATE balances SET balance=balance - amount WHERE user=USER() AND currency=currency;
+	INSERT INTO settlements ('user', 'currency', 'amount', 'direction') VALUES (USER(), currency, amount, 'withdraw');
 END
 
 -- Role administration
 
 CREATE ROLE customer, settler, admin;
 
-GRANT EXECUTE ON create_balances, add_balance, sub_balance to settler;
+GRANT EXECUTE ON create_balances, create_deposit to settler;
+GRANT UPDATE ON settlements to settler;
 GRANT EXECUTE ON submit_order to customer;
 GRANT EXECUTE ON show_balances to customer;
 GRANT EXECUTE ON view_orderbook to customer;
+GRANT EXECUTE ON request_withdraw to customer;
