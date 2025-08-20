@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS pairs(
 CREATE TABLE IF NOT EXISTS balances(
 	user CHAR(32) NOT NULL,
 	currency varchar(255) NOT NULL,
-	balance INT NOT NULL DEFAULT(0),
+	balance NUMERIC(32,18) NOT NULL DEFAULT(0),
 	insert_timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	update_timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY(user, currency),
@@ -120,13 +120,13 @@ BEGIN
 	INSERT INTO balances (user, currency, balance) VALUES (USER(), 'USDC', 0);
 END
 
-CREATE PROCEDURE add_balance(user varchar(255), currency varchar(255), amount INT)
+CREATE PROCEDURE add_balance(user varchar(255), currency varchar(255), amount NUMERIC(32,18))
 RETURNS 'OK'
 BEGIN
 	UPDATE balances SET balance=balance + amount WHERE user=user AND currency=currency;
 END
 
-CREATE PROCEDURE sub_balance(user varchar(255), currency varchar(255), amount INT)
+CREATE PROCEDURE sub_balance(user varchar(255), currency varchar(255), amount NUMERIC(32,18))
 RETURNS 'OK'
 BEGIN
 	UPDATE balances SET balance=balance - amount WHERE user=user AND currency=currency;
